@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using TechnitiumLibrary.IO;
 using TechnitiumLibrary.Net.Dns.ResourceRecords;
@@ -410,6 +411,34 @@ namespace TechnitiumLibrary.Net.Dns
                 else
                     return;
 
+                if (domain.EndsWith(".local"))
+                {
+                    DnsClient dnsClient = null;
+                    var adapters  = NetworkInterface.GetAllNetworkInterfaces();
+                    foreach (var adapter in adapters)
+                    {
+                        var dnsAddresses = adapter.GetIPProperties()?.DnsAddresses;
+                        if (dnsAddresses == null)
+                        {
+                            continue;
+                        }
+                        foreach (var dnsAddress in dnsAddresses)
+                        {
+                            dnsClient = new DnsClient(dnsAddress);
+                            break;
+                        }
+                    }
+                    if (dnsClient != null)
+                    {
+                        var dnsIpAddress = dnsClient.ResolveIP(domain);
+                        if (dnsIpAddress.Length > 0)
+                        {
+                            _ipEndPoint = new IPEndPoint(dnsIpAddress[0], this.Port);
+                        }
+                        return;
+                    }
+                }
+                
                 if (domain == "localhost")
                 {
                     _ipEndPoint = new IPEndPoint((preferIPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback), this.Port);
