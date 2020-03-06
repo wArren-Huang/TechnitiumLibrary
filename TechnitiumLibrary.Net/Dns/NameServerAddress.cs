@@ -413,6 +413,7 @@ namespace TechnitiumLibrary.Net.Dns
 
                 if (domain.EndsWith(".local"))
                 {
+                    Console.WriteLine($"Trying to resolve DNS server [{domain}] locally");
                     DnsClient dnsClient = null;
                     var adapters  = NetworkInterface.GetAllNetworkInterfaces();
                     foreach (var adapter in adapters)
@@ -424,6 +425,7 @@ namespace TechnitiumLibrary.Net.Dns
                         }
                         foreach (var dnsAddress in dnsAddresses)
                         {
+                            Console.WriteLine($"Trying to resolve [{domain}] by [{dnsAddress}]");
                             dnsClient = new DnsClient(dnsAddress);
                             break;
                         }
@@ -433,6 +435,7 @@ namespace TechnitiumLibrary.Net.Dns
                         var dnsIpAddress = dnsClient.ResolveIP(domain);
                         if (dnsIpAddress.Length > 0)
                         {
+                            Console.WriteLine($"[{domain}] resolved to [{dnsIpAddress}]");
                             _ipEndPoint = new IPEndPoint(dnsIpAddress[0], this.Port);
                         }
                         return;
