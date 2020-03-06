@@ -418,26 +418,34 @@ namespace TechnitiumLibrary.Net.Dns
                     var adapters  = NetworkInterface.GetAllNetworkInterfaces();
                     foreach (var adapter in adapters)
                     {
-                        var dnsAddresses = adapter.GetIPProperties()?.DnsAddresses;
-                        if (dnsAddresses == null)
+                        var nameServers = adapter.GetIPProperties()?.DnsAddresses;
+                        if (nameServers == null)
                         {
                             continue;
                         }
-                        foreach (var dnsAddress in dnsAddresses)
+                        foreach (var nameServer in nameServers)
                         {
-                            Console.WriteLine($"Trying to resolve [{domain}] by [{dnsAddress}]");
-                            dnsClient = new DnsClient(dnsAddress);
+                            Console.WriteLine($"Trying to resolve [{domain}] by [{nameServer}]");
+                            dnsClient = new DnsClient(nameServer);
                             break;
                         }
                     }
+
                     if (dnsClient != null)
                     {
-                        var dnsIpAddress = dnsClient.ResolveIP(domain);
-                        if (dnsIpAddress.Length > 0)
+                        var forwarderAddresses = dnsClient.ResolveIP(domain);
+                        if (forwarderAddresses == null)
                         {
-                            Console.WriteLine($"[{domain}] resolved to [{dnsIpAddress}]");
-                            _ipEndPoint = new IPEndPoint(dnsIpAddress[0], this.Port);
+                            Console.WriteLine($"Failed to resolve [{domain}]");
+                            return;
                         }
+
+                        foreach (var forwarderAddress in forwarderAddresses)
+                        {
+                            Console.WriteLine($"[{domain}] resolved to [{forwarderAddress}]");
+                            _ipEndPoint = new IPEndPoint(forwarderAddress, this.Port);
+                        }
+
                         return;
                     }
                 }
